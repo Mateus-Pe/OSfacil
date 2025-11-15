@@ -1,0 +1,88 @@
+@startuml Diagrama Relacional do Banco de Dados - OSFacil
+
+' Configurações
+skinparam linetype ortho
+skinparam roundcorner 5
+skinparam shadowing false
+
+title Diagrama Relacional do Banco de Dados - OSFacil\nSistema de Gestão de Ordens de Serviço
+
+' Entidades
+
+entity "clientes" as clientes {
+  * **id** : INTEGER <<PK>>
+  --
+  * nome : TEXT
+  * telefone : TEXT
+  email : TEXT
+  endereco : TEXT
+  observacoes : TEXT
+  criado_em : DATETIME
+}
+
+entity "vendedores" as vendedores {
+  * **id** : INTEGER <<PK>>
+  --
+  * nome : TEXT
+  * telefone : TEXT
+  email : TEXT
+  * cpf : TEXT
+  * admissao : DATE
+  observacoes : TEXT
+  criado_em : DATETIME
+  atualizado_em : DATETIME
+}
+
+entity "os" as os {
+  * **id** : INTEGER <<PK>>
+  --
+  * contato : TEXT
+  * aparelho : TEXT
+  * problema : TEXT
+  servico : TEXT
+  * valor : REAL
+  * status : TEXT
+  * data_entrada : DATE
+  data_saida : DATE
+  criado_em : DATETIME
+  * cliente_id : INTEGER <<FK>>
+  * vendedor_id : INTEGER <<FK>>
+}
+
+' Relacionamentos
+
+clientes ||--o{ os : "possui"
+vendedores ||--o{ os : "atende"
+
+' Notas explicativas
+
+note bottom of os
+  **Status possíveis da OS:**
+  - Aberta
+  - Em andamento
+  - Finalizada
+  - Cancelada
+
+  **Relacionamentos:**
+  - Uma OS pertence a um Cliente (obrigatório)
+  - Uma OS é atendida por um Vendedor (obrigatório)
+
+  **Obs:** Campos com * são obrigatórios
+end note
+
+note left of clientes
+  **Cardinalidade:**
+  Um cliente pode ter
+  várias ordens de serviço
+  (relacionamento 1:N)
+end note
+
+note left of vendedores
+  **Cardinalidade:**
+  Um vendedor pode atender
+  várias ordens de serviço
+  (relacionamento 1:N)
+end note
+
+@enduml
+

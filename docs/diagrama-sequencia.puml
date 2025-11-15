@@ -1,0 +1,254 @@
+@startuml Diagrama de Sequência - Criar Ordem de Serviço
+
+title Diagrama de Sequência - Criar Ordem de Serviço\nSistema OSFacil
+
+actor "Usuário\n(Atendente)" as Usuario
+participant "View\n(OS.blade.php)" as View
+participant "Controller\n(UsersController)" as Controller
+participant "Model\nCliente" as ModelCliente
+participant "Model\nVendedor" as ModelVendedor
+participant "Model\nOrdem" as ModelOrdem
+database "SQLite\n(osfacil.db)" as DB
+
+== Acessar Formulário ==
+Usuario -> View: Acessa /os
+activate View
+View -> Controller: GET /os
+activate Controller
+
+Controller -> ModelCliente: listar()
+activate ModelCliente
+ModelCliente -> DB: SELECT * FROM clientes
+activate DB
+DB --> ModelCliente: Lista de clientes
+deactivate DB
+ModelCliente --> Controller: clientes[]
+deactivate ModelCliente
+
+Controller -> ModelVendedor: listar()
+activate ModelVendedor
+ModelVendedor -> DB: SELECT * FROM vendedores
+activate DB
+DB --> ModelVendedor: Lista de vendedores
+deactivate DB
+ModelVendedor --> Controller: vendedores[]
+deactivate ModelVendedor
+
+Controller --> View: Renderiza formulário\ncom clientes e vendedores
+deactivate Controller
+View --> Usuario: Exibe formulário
+deactivate View
+
+== Preencher e Enviar Formulário ==
+Usuario -> View: Preenche dados e clica em "Salvar"
+activate View
+View -> View: Valida campos obrigatórios\n(cliente, vendedor, contato,\naparelho, problema, status,\nvalor, data_entrada)
+
+alt Validação OK
+    View -> Controller: POST /os/salvar\n(dados do formulário)
+    activate Controller
+
+    Controller -> ModelOrdem: salvar(dados)
+    activate ModelOrdem
+
+    ModelOrdem -> DB: INSERT INTO os\n(cliente_id, vendedor_id,\ncontato, aparelho, problema,\nservico, valor, status,\ndata_entrada, data_saida)
+    activate DB
+    DB --> ModelOrdem: Sucesso (ID gerado)
+    deactivate DB
+
+    ModelOrdem --> Controller: OS criada com sucesso
+    deactivate ModelOrdem
+
+    Controller --> View: Redireciona para /os/listar
+    deactivate Controller
+
+    View --> Usuario: Exibe mensagem de sucesso\ne lista de OS
+    deactivate View
+
+else Validação falhou
+    View --> Usuario: Exibe mensagens de erro\nnos campos obrigatórios
+    deactivate View
+end
+
+@enduml
+
+@startuml Diagrama de Sequência - Exportar OS para PDF
+
+title Diagrama de Sequência - Exportar OS para PDF\nSistema OSFacil
+
+actor "Usuário\n(Atendente)" as Usuario
+participant "View\n(Oslistar.blade.php)" as View
+participant "Controller\n(UsersController)" as Controller
+participant "Model\nOrdem" as ModelOrdem
+database "SQLite\n(osfacil.db)" as DB
+participant "DomPDF\n(Biblioteca)" as PDF
+
+== Visualizar Lista de OS ==
+Usuario -> View: Acessa /os/listar
+activate View
+View -> Controller: GET /os/listar
+activate Controller
+
+Controller -> ModelOrdem: listar()
+activate ModelOrdem
+ModelOrdem -> DB: SELECT os.*, clientes.nome, vendedores.nome\nFROM os\nJOIN clientes, vendedores
+activate DB
+DB --> ModelOrdem: Lista de OS com dados relacionados
+deactivate DB
+ModelOrdem --> Controller: ordens[]
+deactivate ModelOrdem
+
+Controller --> View: Renderiza lista de OS
+deactivate Controller
+View --> Usuario: Exibe lista com botão "Exportar PDF"
+deactivate View
+
+== Exportar PDF ==
+Usuario -> View: Clica em "Exportar PDF"\npara uma OS específica
+activate View
+
+View -> Controller: GET /os/exportar/{id}
+activate Controller
+
+Controller -> ModelOrdem: exportar(id)
+activate ModelOrdem
+
+ModelOrdem -> DB: SELECT os.*, clientes.nome, vendedores.nome\nFROM os\nWHERE os.id = {id}
+activate DB
+DB --> ModelOrdem: Dados completos da OS
+deactivate DB
+
+ModelOrdem --> Controller: dados_os
+deactivate ModelOrdem
+
+Controller -> PDF: new Dompdf()
+activate PDF
+Controller -> PDF: loadHtml(template_html)
+Controller -> PDF: render()
+PDF --> Controller: PDF renderizado
+deactivate PDF
+
+Controller --> View: response()->download(arquivo.pdf)
+deactivate Controller
+
+View --> Usuario: Download do PDF inicia
+deactivate View
+
+Usuario -> Usuario: Abre/salva arquivo PDF
+
+@enduml
+
+@startuml Diagrama de Sequência - Cadastrar Cliente
+
+title Diagrama de Sequência - Cadastrar Cliente\nSistema OSFacil
+
+actor "Usuário\n(Atendente)" as Usuario
+participant "View\n(cliente.blade.php)" as View
+participant "Controller\n(UsersController)" as Controller
+participant "Model\nCliente" as ModelCliente
+database "SQLite\n(osfacil.db)" as DB
+
+== Acessar Formulário ==
+Usuario -> View: Acessa /cliente
+activate View
+View --> Usuario: Exibe formulário de cadastro
+deactivate View
+
+== Preencher e Enviar ==
+Usuario -> View: Preenche dados\n(nome*, telefone*,\nemail, endereço, observações)
+activate View
+
+Usuario -> View: Clica em "Salvar"
+View -> View: Valida campos obrigatórios\n(nome, telefone)
+
+alt Validação OK
+    View -> Controller: POST /cliente/salvar
+    activate Controller
+
+    Controller -> ModelCliente: salvar(dados)
+    activate ModelCliente
+
+    ModelCliente -> DB: INSERT INTO clientes\n(nome, telefone, email,\nendereco, observacoes)
+    activate DB
+    DB --> ModelCliente: Sucesso (ID gerado)
+    deactivate DB
+
+    ModelCliente --> Controller: Cliente cadastrado
+    deactivate ModelCliente
+
+    Controller --> View: Redireciona para /
+    deactivate Controller
+
+    View --> Usuario: Exibe mensagem de sucesso\ne retorna ao menu
+    deactivate View
+
+else Validação falhou
+    View --> Usuario: Exibe erros nos campos
+    deactivate View
+end
+
+@enduml
+
+@startuml Diagrama de Sequência - Listar e Excluir OS
+
+title Diagrama de Sequência - Listar e Excluir OS\nSistema OSFacil
+
+actor "Usuário\n(Atendente)" as Usuario
+participant "View\n(Oslistar.blade.php)" as View
+participant "Controller\n(UsersController)" as Controller
+participant "Model\nOrdem" as ModelOrdem
+database "SQLite\n(osfacil.db)" as DB
+
+== Listar Ordens de Serviço ==
+Usuario -> View: Acessa /os/listar
+activate View
+
+View -> Controller: GET /os/listar
+activate Controller
+
+Controller -> ModelOrdem: listar()
+activate ModelOrdem
+
+ModelOrdem -> DB: SELECT os.id, clientes.nome,\nvendedores.nome, os.aparelho, os.status\nFROM os\nJOIN clientes, vendedores\nORDER BY os.id DESC
+activate DB
+DB --> ModelOrdem: Lista de OS
+deactivate DB
+
+ModelOrdem --> Controller: ordens[]
+deactivate ModelOrdem
+
+Controller --> View: Renderiza tabela com OS
+deactivate Controller
+
+View --> Usuario: Exibe lista com ações\n(Exportar PDF, Excluir)
+deactivate View
+
+== Excluir Ordem de Serviço ==
+Usuario -> View: Clica em "Excluir"\npara uma OS específica
+activate View
+
+View -> Usuario: Exibe confirmação:\n"Tem certeza?"
+Usuario -> View: Confirma exclusão
+
+View -> Controller: POST /os/deletar/{id}
+activate Controller
+
+Controller -> ModelOrdem: deletar(id)
+activate ModelOrdem
+
+ModelOrdem -> DB: DELETE FROM os\nWHERE id = {id}
+activate DB
+DB --> ModelOrdem: Sucesso
+deactivate DB
+
+ModelOrdem --> Controller: OS excluída
+deactivate ModelOrdem
+
+Controller --> View: Redireciona para /os/listar
+deactivate Controller
+
+View --> Usuario: Exibe mensagem de sucesso\ne atualiza lista
+deactivate View
+
+@enduml
+

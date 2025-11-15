@@ -1,0 +1,70 @@
+@startuml Diagrama de Casos de Uso - OSFacil
+
+' Configurações para melhor visualização
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+skinparam package {
+    BackgroundColor WhiteSmoke
+    BorderColor DarkGray
+}
+
+title Diagrama de Casos de Uso - OSFacil\nSistema de Gestão de Ordens de Serviço
+
+' Lado ESQUERDO - Clientes
+package "Gestão de Clientes" as PKG1 {
+    usecase "Cadastrar\nCliente" as UC1
+    usecase "Listar\nClientes" as UC2
+    usecase "Excluir\nCliente" as UC3
+}
+
+' Lado ESQUERDO - Vendedores
+package "Gestão de Vendedores" as PKG2 {
+    usecase "Cadastrar\nVendedor" as UC4
+    usecase "Listar\nVendedores" as UC5
+    usecase "Excluir\nVendedor" as UC6
+}
+
+' CENTRO - Ator
+actor "Usuário\n(Atendente)" as Usuario
+
+' Lado DIREITO - Ordens de Serviço
+package "Gestão de Ordens de Serviço" as PKG3 {
+    usecase "Criar Ordem\nde Serviço" as UC7
+    usecase "Listar Ordens\nde Serviço" as UC8
+    usecase "Exportar OS\npara PDF" as UC9
+    usecase "Excluir Ordem\nde Serviço" as UC10
+}
+
+' Relacionamentos do lado ESQUERDO
+Usuario --> UC1
+Usuario --> UC2
+Usuario --> UC3
+Usuario --> UC4
+Usuario --> UC5
+Usuario --> UC6
+
+' Relacionamentos do lado DIREITO
+Usuario --> UC7
+Usuario --> UC8
+Usuario --> UC9
+Usuario --> UC10
+
+' Organização do layout
+PKG1 -[hidden]-> Usuario
+PKG2 -[hidden]-> Usuario
+Usuario -[hidden]-> PKG3
+
+' Nota explicativa sobre dependências
+note bottom of UC7
+  **Observação:** Para criar uma OS
+  é necessário ter cliente e vendedor
+  previamente cadastrados
+end note
+
+@enduml
+
